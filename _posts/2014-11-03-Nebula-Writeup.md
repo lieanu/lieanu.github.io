@@ -206,7 +206,7 @@ Google，然后发现原来是loads()的时候，触发__recude__()函数产生�
 函数，os.system()没有得到想要的结果，换了subprocess.Popen以后，搞定了
 
 
-```
+```python
 #!/usr/bin/env python2
 import pickle
 import socket
