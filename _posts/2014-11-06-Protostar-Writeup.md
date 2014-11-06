@@ -200,3 +200,5 @@ main()
 // milw0rm.com [2006-07-20]
 ```
 
+要拿root权限，还需要跑/opt/protostar/bin/stack5这个路径下的文件，不过因为文件夹对user用户有写限制，
+所以core dump不好生成，可在root权限下生成core dump进行分析
