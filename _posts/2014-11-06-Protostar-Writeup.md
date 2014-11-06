@@ -141,6 +141,9 @@ gets()这种溢出，还有个情况，/bin/sh时，标准输入会出现一些�
 所以stdin需要重新打开，这有个牛B的shellcode,备忘：
 [http://www.exploit-db.com/exploits/13357/](http://www.exploit-db.com/exploits/13357/)
 
+> 原来这种情况是这样的：`<`这个符号导致的原因
+> 有人提出这种方法` (cat payload5; cat) | /opt/protostar/bin/stack5`
+
 ```c
 /*
  * $Id: gets-linux.c,v 1.3 2004/06/02 12:22:30 raptor Exp $
