@@ -1,6 +1,8 @@
 ---
 layout: post
 title: Paper Reading - Paxos Made Simple
+catagories: [ReadingNotes]
+tags: [Paxos, Paper, Distribute system]
 ---
 
 > *水平有限,文虽不长,但还是完全不知所云...*

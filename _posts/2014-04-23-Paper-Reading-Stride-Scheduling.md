@@ -1,7 +1,8 @@
 ---
 layout: post
 title: Paper Reading - Stride Scheduling Deterministic Proportional-Share Resource Management
-
+catagories: [ReadingNotes]
+tags: [stride scheduling,  Paper, OS]
 ---
 
 > 没有细读...

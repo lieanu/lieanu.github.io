@@ -1,7 +1,8 @@
 ---
 layout: post
 title: Paper Reading - Memory Resource Management in VMware ESX Server
-
+catagories: [ReadingNotes]
+tags: [ESX, Memory, Paper, OS]
 ---
 
 ##1 Introduction

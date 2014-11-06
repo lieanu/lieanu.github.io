@@ -1,6 +1,8 @@
 ---
 layout: post
 title: Paper Reading - Selective Symbolic Execution
+catagories: [ReadingNotes]
+tags: [Symbolic Execution,  Paper]
 
 ---
 

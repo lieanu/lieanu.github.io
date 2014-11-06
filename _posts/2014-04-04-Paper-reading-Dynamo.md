@@ -1,6 +1,8 @@
 ---
 layout: post
 title: Paper Reading - Amazon Dynamo
+catagories: [ReadingNotes]
+tags: [Dynamo, Amazon, Paper, Distribute system]
 ---
 
 1.Introduction

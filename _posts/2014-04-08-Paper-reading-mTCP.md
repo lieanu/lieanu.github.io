@@ -1,6 +1,8 @@
 ---
 layout: post
 title: Paper Reading - mTCP - A Highly Scalable User-level TCP Stack for Multicore Systems
+catagories: [ReadingNotes]
+tags: [mTCP, OS, tcp/ip]
 ---
 
 

@@ -1,7 +1,8 @@
 ---
 layout: post
 title: Paper Reading - SELECT - a formal system for testing and debugging programs by symbolic execution
-
+catagories: [ReadingNotes]
+tags: [SELECT, symbolic execution, Distribute system]
 ---
 
 > 本文写自1975年,距今39年.
