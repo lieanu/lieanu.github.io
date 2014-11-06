@@ -1,6 +1,8 @@
 ---
 layout: post
 title: Nebula WriteUp
+catagories: [ctf-execrise]
+tags: [ctf, writeup, nebula]
 ---
 
 > 重在过程，收获良多
