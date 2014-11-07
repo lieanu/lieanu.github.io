@@ -13,7 +13,7 @@ defaults:
     scope:
       path: "" # empty string for all files
     values:
-      title: Lieanu's Site.
+      title: Lieanu's Blog.
 
 description:  mumbo-jumbo
 author:
