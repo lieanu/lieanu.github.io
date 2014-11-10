@@ -1,6 +1,6 @@
 ---
 layout: post
-title: HCTF2014 wow writeup
+title: HCTF2014 真的能做吗600 writeup
 catagories: [ctf]
 tags: [ctf, writeup, hctf, xctf]
 ---
