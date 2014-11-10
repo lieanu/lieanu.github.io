@@ -6,7 +6,6 @@ tags: [ctf, writeup, hctf, xctf]
 ---
 > wow的这一题的binary同时也是“真的能做吗”的binary.
 
-##Step 1：
 
 IDA可以看到关键问部分在`check()`函数里，wow的位置存了22个字符串，每个字符串的位置大小是65字节，`GetSentence()`这个函数做的事情，就是把字符串里的非字母的东西的过滤掉，然后不足65字节的全部补0.
 
