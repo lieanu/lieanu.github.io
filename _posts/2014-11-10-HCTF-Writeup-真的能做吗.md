@@ -12,7 +12,7 @@ tags: [ctf, writeup, hctf, xctf]
 保留最终的`0x30+0x8+0x8`这些数据，前面的数据都会丢失，那也就是说，我们的可以利用的缓
 冲区也就是从`ebp-0x30`到`retaddr`之间，直接改写，就改写了retaddr。
 
-利用ROPGadget找到`pop rdi, ret`, 因为这题的libc是静态编译到wow的，所以可以找到`system()`
+利用ROPGadget找到`pop rdi, ret`和`pop xx, pop xx, pop xx, ret`, 因为这题的libc是静态编译到wow的，所以可以找到`system()`
 的地址，IDA里也可以搜索`/bin/sh`,万事俱备。
 
 同时，由于需要绕过前面这个大循环，所以需要wow题的flag.此flag长度22,那么我们的栈大概是这样的布局
