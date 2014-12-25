@@ -13,7 +13,7 @@ defaults:
     scope:
       path: "" # empty string for all files
     values:
-      title: Lieanu's Blog.
+      title: Lieanu
 
 description:  mumbo-jumbo
 author:
@@ -23,7 +23,7 @@ author:
     twitter: Mr_LiuYue
     pinterest: lieanu 
     linkedin: yue-liu 
-    bio: RE & Exploiting!
+    bio: RE & Pwner!
     email_md5: 97483d16a6cc97ab77ef69bd462be429
 
 rss_path: feed.xml
