@@ -2,7 +2,7 @@
 layout: post
 title: 阿里移动安全挑战赛小记
 catagories: [ctf]
-tags: [android, ali, dex]
+tags: [writeup, msc, android, ali]
 ---
 
 > 从零开始学习Android逆向/混淆/反调试
