@@ -62,7 +62,9 @@ for one in pw:
 
 安装成功，运行一下，程序跑不起来，输入的textedit都不弹出来。应该是改失败了。再猜。
 
-继续分析代码后，发现`JNI_OnLoad`里有个`v5 = dword_62B4(handle, 0, sub_16A4, 0);`不知道干啥用的。试着把它NOP掉，再重打包吧。好吧，猜对，可以调试了。在`0x000012A4`下个断点，`ni`一下，`x/10s $r2`读到flag。
+继续分析代码后，发现`JNI_OnLoad`里有个`v5 = dword_62B4(handle, 0, sub_16A4, 0);`不知道干啥用的。试着把它NOP掉，再重打包吧。好吧，猜对，可以调试了。在`0x000012A4 + offset`下个断点，`ni`一下，`x/10s $r2`读到flag。
+
+这里上面这个`offset`是指这个so被映射到内存中的基址，这个地址怎么看？`cat /proc/xxx/maps`就可以看到。
 
 ##0x03 Crackme 3
 
