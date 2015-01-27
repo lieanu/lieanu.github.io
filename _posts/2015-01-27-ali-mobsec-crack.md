@@ -58,7 +58,7 @@ for one in pw:
 
 没写过Android代码，也没搞过这一块的反调试，打开脑洞猜吧。yhy写了几个对应的解密的函数，对一堆可疑的字符串解密后，是一些诸如`dlsym/getpid`之类的libc函数。这不应该是反调试的地方啊，没有对应的敏感函数。简单故意改错几个字符串，然后再重打包。
 
-没搞过重打包，又要恶补一下了。这里找到了`apktools`，才发现`unzip`的方法太暴力，不能重打包回来。替换了改过的so文件后，重打包。然后`adb install ***.apk`，失败了。证书不对，还要重签名，搜了一下重签名的命令，还没签好。找一找有没有更方便的重签名工具吧。这里最终用了它`https://github.com/appium/sign.git`,还是很方便的。
+没搞过重打包，又要恶补一下了。这里找到了`apktools`，才发现`unzip`的方法太暴力，不能重打包回来。替换了改过的so文件后，重打包。然后`adb install ***.apk`，失败了。证书不对，还要重签名，搜了一下重签名的命令，还没签好。找一找有没有更方便的重签名工具吧。这里最终用了它[https://github.com/appium/sign.git](https://github.com/appium/sign.git),还是很方便的。
 
 安装成功，运行一下，程序跑不起来，输入的textedit都不弹出来。应该是改失败了。再猜。
 
@@ -68,7 +68,7 @@ for one in pw:
 
 ##0x03 Crackme 3
 
-简单分析一下，`classes.dex`里啥都没有，`lib`里，有3个so,有一个是正经的elf32文件，另一个竟然是jar伪装的，还是一个是纯data的，暂时不知道干啥用的。把jar伪装的那个拿出来，反编译一下，发现函数竟然都是空的。判断应该是加壳了，虽然对加壳的方法一窍不通。但是先这么判断吧。
+简单分析一下，`classes.dex`里啥都没有，`lib`里，有3个so,有一个是正经的`elf32`文件，另一个竟然是`jar`伪装的，还是一个是纯`data`的，暂时不知道干啥用的。把`jar`伪装的那个拿出来，反编译一下，发现函数竟然都是空的。判断应该是加壳了，虽然对加壳的方法一窍不通。但是先这么判断吧。
 
 试着调试，会告诉我`ptrace: no permission`之类的提示，再google大法，判断应该是程序自己调了`ptrace`来ptrace自己，然后gdb因为也需要`ptrace`来实现调试的功能，连续两次被`ptrace`搞，就对弹这么个问题。google大法告诉，这是实现反调试的一种方法，梆梆加固有种反调试的方法，就跟此类似，用三个进程互相`ptrace`。
 
@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
 因为不懂`dex`的格式，再google大法恶补一下吧。[看看官方的文档](https://source.android.com/devices/tech/dalvik/dex-format.html)
 
-一番学习之后，再用`010editor`解析一下吧，更方便看。就在这里，`010editor`告诉我试用期到期，请购买。
+一番学习之后，再用`010editor`解析一下吧，更方便看。就在这时，`010editor`告诉我试用期到期，请购买。
 本屌丝没钱，只有试着破解它，扔到`ida`发现，符号表都在，改一个条件跳转为无条件跳转，秒破了。不会吧，
 一点保护措施都没有。
 
@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
 以下是改动的smali源码的部分。
 
-```
+```diff
 diff --git a/dexlib2/src/main/java/org/jf/dexlib2/dexbacked/BaseDexReader.java b/dexlib2/src/main/java/org/jf/dexlib2/dexbacked/BaseDexReader.java
 index 96645b8..b137bc6 100644
 --- a/dexlib2/src/main/java/org/jf/dexlib2/dexbacked/BaseDexReader.java
@@ -191,7 +191,7 @@ yhy说`baksmali/smali.jar`就能实现从`smali`到`dex`的互相转换啊。真
 
 这里感慨`testdex2jarcrash`函数的牛逼啊，没几个代码，怎么能实现`anti-decompile`。somebody看了看，说问题出现`.end param`这个地方，这个语法是不对的，所以解不出来。也就是只要把这一句，注释掉就可以了。如下：
 
-```
+```ruby
 .method public testdex2jarcrash(Ljava/lang/String;Ljava/lang/String;)V
     .registers 3
     .param p1, "test1"    # Ljava/lang/String;
