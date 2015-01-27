@@ -58,7 +58,7 @@ for one in pw:
 
 没写过Android代码，也没搞过这一块的反调试，打开脑洞猜吧。yhy写了几个对应的解密的函数，对一堆可疑的字符串解密后，是一些诸如`dlsym/getpid`之类的libc函数。这不应该是反调试的地方啊，没有对应的敏感函数。简单故意改错几个字符串，然后再重打包。
 
-没搞过重打包，又要恶补一下了。这里找到了`apktools`，才发现`unzip`的方法太暴力，不能重打包回来。替换了改过的so文件后，重打包。然后`adb install ***.apk`，失败了。证书不对，还要重签名，搜了一下重签名的命令，还没签好。找一找有没有更方便的重签名工具吧。这里最终用了它[https://github.com/appium/sign.git](https://github.com/appium/sign.git),还是很方便的。
+没搞过重打包，又要恶补一下了。这里找到了`apktools`，才发现`unzip`的方法太暴力（补：apktools会做一些反编译的事情，还是unzip大法好）。替换了改过的so文件后，重打包。然后`adb install ***.apk`，失败了。证书不对，还要重签名，搜了一下重签名的命令，还没签好。找一找有没有更方便的重签名工具吧。这里最终用了它[https://github.com/appium/sign.git](https://github.com/appium/sign.git),还是很方便的。
 
 安装成功，运行一下，程序跑不起来，输入的textedit都不弹出来。应该是改失败了。再猜。
 
