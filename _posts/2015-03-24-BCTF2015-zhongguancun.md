@@ -5,7 +5,7 @@ catagories: [ctf]
 tags: [ctf, writeup, BCTF2015, pwn, exploit]
 ---
 
-> 堆溢出
+> 堆溢出, 弱菜解题小记
 
 ```
 *********************************
@@ -117,7 +117,7 @@ print "[+] leak system() address: ", hex(systemaddr)
 io.interactive()
 ```
 
-然后，再利用上面脚本，稍做修改，将泄露出来的地址硬写进去，加个while的循环，暴力的等shell吧。还是是32位的二进制程序，如果是64位的，这个方法是行不通的。
+然后，再利用上面脚本，稍做修改，将泄露出来的地址硬写进去，改一下来触发来`system("sh")`(我改的是atoi()函数，并给传进去的参数是"sh"， 利用脚本就不贴了，跟上面大同小异), 加个while的循环，暴力的等shell吧。还好是32位的二进制程序，如果是64位的，这个方法是行不通的。所以不推荐我这里使用的暴力的方法。
 
 下面我们来看看别的队伍的比较完美的利用吧。
 
@@ -138,4 +138,4 @@ if ( v2 >= 0 )
     sprintf(nptr, "Total money left: %d CNY.\n", *(_DWORD *)mymoney);
 ```
 
-利用钱数改动的操作，将`sprintf`到`system()`的偏移计算好，接下来，执行到`sprintf()`就相当于执行`system("2 ;sh")`了，`nptr="2 ;sh"`
+利用钱数改动的操作，将`sprintf`到`system()`的偏移计算好，直接利用`momey - a1->price*v1`的操作将`sprintf`的`got`表的值改成真实的`system`函数地址值，接下来，执行到`sprintf()`就相当于执行`system("2 ;sh")`了，`nptr="2 ;sh"`
