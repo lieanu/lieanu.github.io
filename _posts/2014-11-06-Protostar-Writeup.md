@@ -90,7 +90,7 @@ Segmentation fault
 几个技巧：
 
 1. nasm与ndisasm很强大，一个汇编编译，一个反汇编
-2. 调试时关闭地址随机化`echo 0 >/proc/sys/kernel/randomize_va_space`
+2. alsr调试时关闭地址随机化`echo 0 >/proc/sys/kernel/randomize_va_space`
 3. pwntools和msfconsole很强大，生成shellcode的话，msfconsole很全
 4. core dump很有必要，因为gdb下和真实运行还是有很大差别的.`ulimit -c unlimited`和`echo "/tmp/core-%e-%p-%t" > /proc/sys/kernel/core_pattern`
 
