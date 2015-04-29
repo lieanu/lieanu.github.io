@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Automate ROP</title>
+
+		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+		<meta name="author" content="Hakim El Hattab">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+		<link rel="stylesheet" href="../reveal.js/css/reveal.css">
+		<link rel="stylesheet" href="../reveal.js/css/theme/moon.css" id="theme">
+
+		<!-- Code syntax highlighting -->
+		<link rel="stylesheet" href="../reveal.js/lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? '../reveal.js/css/print/pdf.css' : '../reveal.js/css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="../reveal.js/lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+                    <h1>Automate ROP</h1>
+					<!--<h3>The HTML Presentation Framework</h3>-->
+					<h3>基于BARF的ROP链自动生成</h3>
+					<p>
+						<small>By <a href="http://lieanu.github.io">Yue Liu</a> </small>
+					</p>
+				</section>
+
+
+				<section>
+					<h2>内容简介</h2>
+					<ul>
+						<li>BARF项目介绍</li>
+						<li>REIL语言介绍</li>
+						<li>Z3介绍</li>
+						<li>ROP相关知识介绍</li>
+						<li>自动化ROP链生成</li>
+					</ul>
+				</section>
+
+				<!-- Example of nested vertical slides -->
+				<section>
+                    <section>
+						<h2>The BARF Project</h2>
+                        <p>BARF是一个二进制分析平台。</p>
+                        <p>类似的项目有:BAP(CMU)，Bitblaze(伯克利)等项目。</p>
+                        <p>GitHub主页：<a href="https://github.com/programa-stic/barf-project" target="_blank">https://github.com/programa-stic/barf-project</a></p>
+                        <ul>
+                            <li>Insight <a href="https://insight.labri.fr/trac/wiki">https://insight.labri.fr/trac/wiki</a></li>
+                            <li>Amoco <a href="https://github.com/bdcht/amoco">https://github.com/bdcht/amoco</a></li>
+                            <li>Jakstab <a href="https://github.com/jkinder/jakstab">https://github.com/jkinder/jakstab</a></li>
+                            <li>SEA <a href="https://github.com/neuromancer/SEA">https://github.com/neuromancer/SEA</a></li>
+                            <li>Mcsema <a href="https://github.com/trailofbits/mcsema">https://github.com/trailofbits/mcsema</a></li>
+                            <li>Libbeauty <a href="https://github.com/jcdutton/libbeauty">https://github.com/jcdutton/libbeauty</a></li>
+					</section>
+					<section>
+						<h2>New feature</h2>
+                        <ul>
+                            <li>支持X86，X86_64，ARM架构</li>
+                            <li>跨平台支持目标，同时支持Linux，Windows，MAC OS</li>
+                            <li>基于REIL中间语言，易于扩展</li>
+                            <li>使用于Z3和CVC4，COOL</li>
+                        </ul>
+					</section>
+					<section>
+						<h2>Architecture</h2>
+                        <img data-src="../reveal.js/img/arch.png">
+					</section>
+					<section>
+						<h2>Analysis Module</h2>
+						<h3>Basic Block</h3>
+                            <p>基本块生成，CFG恢复。</p>
+						<h3>Code Analyzer</h3>
+                            <p>基于SMT，提供代码分析功能。(demo)</p>
+						<h3>Gadget</h3>
+                            <p>ROP Gadget查找，分类和验证功能。</p>
+					</section>
+					<section>
+						<h2>如何查找Gadget?</h2>
+                        <h3>ROPgadget的做法：</h3>
+                        <p>GitHub主页 <a href="https://github.com/JonathanSalwan/ROPgadget">https://github.com/JonathanSalwan/ROPgadget</a></p>
+                        <ul>
+                            <li>暴力搜索特定指令</li>
+                            <li>找到位置后，逐字节前移，解析指令</li>
+                            <li>可解析为汇编码，加入Gadget列表</li>
+                            <li>循环以上步骤，直至指定深度</li>
+                        </ul>
+                            <section data-markdown>
+                                <script type="text/template">
+    ```
+        ROPgadget = [
+                ["\xc3", 1, 1],               # ret
+                ["\xc2[\x00-\xff]{2}", 3, 1], # ret <imm>
+                ["\xff[\x20\x21\x22\x23\x26\x27]{1}", 2, 1], # jmp  [reg]
+                ["\xff[\xe0\xe1\xe2\xe3\xe4\xe6\xe7]{1}", 2, 1], # jmp  [reg]
+                ["\xff[\x10\x11\x12\x13\x16\x17]{1}", 2, 1], # jmp  [reg]
+                ["\xff[\xd0\xd1\xd2\xd3\xd4\xd6\xd7]{1}", 2, 1]  # call  [reg]
+                ["\xcd\x80", 2, 1], # int 0x80
+                ["\x0f\x34", 2, 1], # sysenter
+                ["\x0f\x05", 2, 1], # syscall
+                ]
+
+    ```
+                                </script>
+                            </section>
+					</section>
+                    <section>
+                        <h3>rop-tool的做法</h3>
+                        <p>GitHub主页 <a href="https://github.com/t00sh/rop-tool">https://github.com/t00sh/rop-tool</a></p>
+                        <ul>
+                            <li>找以ret/jmp/call结束的指令</li>
+                            <li>然后过滤，留下那些作者认为有用的gadget</li>
+                            <li>因为用c编写，所以效率要高</li>
+                        </ul>
+                        <pre><code data-trim contenteditable>
+static const char *intel_x86_filters[] = {
+  "pop %D",
+  "popa",
+  "push %D",
+  "pusha",
+  "add %D, dword ptr [%X]",
+  "int %X",
+  "call %D",
+  "jmp %D",
+  "mov %b, %b",
+  "add byte ptr [%D], %B",
+  "xchg %D, %D",
+  "inc %B",
+  "dec %B",
+  "leave ",
+  "ret "};
+                        </code></pre>
+					</section>
+                    <section>
+                        <h3>BARFgadget的做法</h3>
+                        <ul>
+                            <li>暴力搜索特定指令</li>
+                            <li>找到位置后，从该位置往前，解析指令</li>
+                            <li>可解析为汇编码，加入Gadget列表</li>
+                            <li>循环以上步骤，直至指定深度</li>
+                        </ul>
+                            <section data-markdown>
+                                <script type="text/template">
+    ```
+            op_codes = [
+                "\xc3",     # RET
+                "\xc2",     # RET imm16
+                "\xeb",     # JMP rel8
+                "\xe8",     # CALL rel{16,32}
+                "\xe9",     # JMP rel{16,32}
+                "\xff",     # JMP/CALL r/m{16,32,64}
+            ]
+    ```
+    
+                                </script>
+                            </section>
+					</section>
+                    <section>
+                        <h3>Classify</h3>
+                        <ul>
+                            <li>转换成REIL中间语言</li>
+                            <li>随机化初始寄存器</li>
+                            <li>模拟执行，得到最终的寄存器值和内存状态，reilemulator</li>
+                            <li>根据执行结果，对gadget进行分类</li>
+                        </ul>
+                        <pre><code data-trim contenteditable>
+# Load Memory (7 gadgets)
+-------------------------------------------------------------------------------------------
+  Address   |       Operation       | Clobbered Registers |     Instructions    
+-------------------------------------------------------------------------------------------
+ 0x08048419 | ebp <- mem[ebp]       | {esp}               | leave ; ret 
+ 0x080485bf | edi <- mem[esp]       | {esp; ebp}          | pop edi ; pop ebp ; ret 
+ 0x080485bf | ebp <- mem[esp + 0x4] | {edi; esp}          | pop edi ; pop ebp ; ret 
+ 0x080485cd | ebp <- mem[ebp]       | {esp; eax}          | mov eax, 0x0 ; leave ; ret 
+                        </code></pre>
+                    </section>
+                    <section>
+                        <h3>Verify</h3>
+                        <ul>
+                            <li>在Classify的基础上进行处理</li>
+                            <li>借助code_analyzer模块，获取源和目的寄存器/内存的符号值</li>
+                            <li>将gadget的每条指令，翻译成能符号化表示的表达式(SMT translator)</li>
+                            <li>得到整个gadget的约束表达式以后，使用求解器进行验证(z3/cvc4)</li>
+                            <li>判断其变化是否如Classify中所得到的一致</li>
+                        </ul>
+                    </section>
+				</section>
+
+				<section>
+                    <section>
+                        <h2>REIL中间语言简介</h2>
+                        <h3>Reverse Engineering Intermediate Language</h3>
+                        <p>REIL: A platform-independent interme-diate representation of disassembled code for static code analysis.</p>
+                        <img data-src="../reveal.js/img/binnavi_logo.gif">
+                    </section>
+                    <section>
+                        <h3>为什么选择REIL语言?</h3>
+                        <ul>
+                            <li>简单</li>
+                            <ul>
+                                <li>PowerPC有1000+条指令，X86有988条，REIL只有17条</li>
+                            </ul>
+                            <li>无副作用</li>
+                            <ul>
+                                <li>没有各种标志位，一条指令，只产生一个效果</li>
+                            </ul>
+                            <li>平台无关</li>
+                            <ul>
+                                <li>X86/ARM/PowerPC均可转到REIL，在REIL层做分析</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h1>17</h1>
+                        <h3>instructions</h3>
+                        <p>add/and/bisz/bsh/div/jcc/ldm/mod/mul</p>
+                        <p>nop/or/stm/str/sub/undef/unkn/xor</p>
+                    </section>
+                    <section>
+                        <h3>指令分类与示例</h3>
+                        <ul>
+                            <li>算术运算指令    6个</li>
+                            <li>位运算指令      3个</li>
+                            <li>逻辑操作指令    2个</li>
+                            <li>数据传送指令    3个</li>
+                            <li>其它            3个</li>
+                        </ul>
+                        <pre><code data-trim contenteditable>
+                    #All REIL instructions
+                    add t0, t1, t2          and t0, t1, t2
+                    bsh t0, t1, t2          div t0, t1, t2
+                    mod t0, t1, t2          mul t0, t1, t2
+                    or t0, t1, t2           sub t0, t1, t2
+                    xor t0, t1, t2          bisz t0, , t2
+                    jcc t0, , t2            ldm t0, , t2
+                    str t0, , t2            stm t0, , t2
+                    nop , ,                 undef , , t2
+                    unkn , ,
+                        </code></pre>
+                    </section>
+                    <section>
+                        <h3>A Example</h3>
+                        <pre><code data-trim contenteditable>
+0x80485cd eax <- 0x0 >      {ebp; esp} mov eax, 0x0; leave; ret
+0x80485cd ebp <- mem[ebp] > {esp; eax} mov eax, 0x0; leave; ret
+str   [DWORD 0x0, EMPTY, DWORD eax]
+str   [DWORD ebp, EMPTY, DWORD esp]
+ldm   [DWORD esp, EMPTY, DWORD ebp]
+add   [DWORD esp, DWORD 0x4, DWORD t3]
+str   [DWORD t3, EMPTY, DWORD esp]
+ldm   [DWORD esp, EMPTY, DWORD t2]
+add   [DWORD esp, DWORD 0x4, DWORD t1]
+str   [DWORD t1, EMPTY, DWORD esp]
+ret   [EMPTY, EMPTY, EMPTY]
+                        </code></pre>
+                    </section>
+                    <section>
+                        <h3>其它REIL相关项目</h3>
+                        <p>推荐openreil <a href="https://github.com/Cr4sh/openreil">https://github.com/Cr4sh/openreil</a></p>
+                        <ul>
+                            <li>目前使用了23个REIL指令</li>
+                            <li>细节考虑比BARF要完善，但目前只支持x86</li>
+                            <li>提供了丰富的分析接口，c/python、IDA/GDB/WinDbg等</li>
+                        </ul>
+                    </section>
+				</section>
+
+				<section>
+                    <section>
+                        <h2>z3简介</h2>
+                        <ul>
+                            <li>
+                                由微软开发，广泛用于程序分析与验证/测试样例生成等
+                            </li>
+                            <li>
+                                使用C++开发，Windows/Linux/OSX/FreeBSD下均可使用
+                            </li>
+                            <li>
+                                提供了Java/C/C++/Python等众多语言的接口
+                            </li>
+                            <li>
+                                GitHub主页: <a href="https://github.com/Z3Prover/z3">https://github.com/Z3Prover/z3</a>
+                            </li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>Z3 Hello-World</h3>
+                        <pre><code data-trim contenteditable>
+from z3 import *
+a, b = BitVecs('a b', 32)
+s = Solver()
+s.add((a + b) == 1337)
+if s.check() == sat:
+    print s.model()
+else:
+    print 'Unsat'
+                        </code></pre>
+                        <pre><code data-trim contenteditable>
+In [1]: from z3 import *
+
+In [2]: a, b = BitVecs('a b', 32)
+
+In [3]: s = Solver()
+
+In [4]: s.add((a + b) == 1337)
+
+In [5]: s.check()
+Out[5]: sat
+
+In [6]: s.model()
+Out[6]: [b = 0, a = 1337]
+
+                        </code></pre>
+                    </section>
+                    <section>
+                        <h3>上例解释</h3>
+                        <ul>
+                            <li>
+                                BitVec就是比特位的数组，32位代表一个int型的数
+                            </li>
+                            <li>
+                                BitVec8，表示8位的数，等价C中的一个unsigned char
+                            </li>
+                            <li>
+                                将一组约束表达式，提供给一个Solver实例，s.add(xxx)
+                            </li>
+                            <li>
+                                z3变量明显和python变量不是一回事
+                            </li>
+                            <li>
+                                还有一些其它类型变量，如Ints，Bools，Arrays等
+                            </li>
+                            <li>
+                                Z3的integer是无穷大的，而BitVecs是指定位数的
+                            </li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>上例解释</h3>
+                        <ul>
+                            <li>
+                                NOTE: Z3的数据类型，不包含符号信息
+                            </li>
+                            <ul>
+                                <li>
+                                    对于有符号的操作，可以用<,<=,>,>=,/,%,>>
+                                </li>
+                                <li>
+                                    对于无符号的操作，可以用ULT, ULE, UGT, UGE, UDiv, URemand, LShR
+                                </li>
+                            </ul>
+                            <pre><code data-trim contenteditable>
+In [7]: c = BitVec("c", 8)
+
+In [8]: s = Solver()
+
+In [9]: s.add(c < 0)
+
+In [10]: s.check()
+Out[10]: sat
+
+In [11]: s.model()
+Out[11]: [c = 255]
+
+In [12]: s.reset()
+
+In [13]: s.add(ULT(a, 0))
+
+In [14]: s.check()
+Out[14]: unsat
+
+                            </code></pre>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>上例解释</h3>
+                        <ul>
+                            <li>
+                                如果有解，使用model()函数，会返回一个具体值
+                            </li>
+                            <li>
+                                还可以使用push和pop，记录约束，用于回溯
+                            </li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>一个简单的例子</h3>
+                        <p>一堆苹果，5个5个数剩4个，4个4个数剩3个，3个3个数剩2个，2个2个数剩1个。求苹果数可能是多少？(Demo)</p>
+                    </section>
+                    <section>
+                        <h3>一个图染色的例子</h3>
+                            <pre><code data-trim contenteditable>
+s = Solver()
+nodes_colors = dict((node_name, Int('k%r' % node_name)) for node_name in graph.nodes())
+
+# We'll test if the graph is colorable with 1 then 2 then 3 ..colors until to find the correct number
+for i in range(1, graph.number_of_nodes()):
+    for node in graph.nodes():
+        s.add(nodes_colors[node] >= 0, nodes_colors[node] <= i)
+        for neighbor in graph.neighbors(node):
+            s.add(nodes_colors[node] != nodes_colors[neighbor])
+                            </code></pre>
+                    </section>
+                    <section>
+                        <h3>一个图染色的例子</h3>
+                            <pre><code data-trim contenteditable>
+Building the graph..
+Trying to color 'peternson_3_coloring_graph' now (10 nodes, 17 edges)..
+OK, found a solution with 3 colors
+Here is the solution (in 0s):
+{u'1': 2, u'0': 1, u'3': 0, u'2': 2, u'5': 0, u'4': 2, u'7': 1, u'6': 0, u'9': 2, u'8': 1}
+Setting the colors on the nodes..
+Saving it in the current directory with the layout 'circo'..
+---
+Trying to color 'twopi2_fat_graph' now (1090 nodes, 1118 edges)..
+OK, found a solution with 3 colors
+Here is the solution (in 2s):
+Too long, see the .png!
+Setting the colors on the nodes..
+Saving it in the current directory with the layout 'twopi'..
+---
+                            </code></pre>
+                    </section>
+                    <section>
+                        <h3>一个图染色的例子</h3>
+                        <img data-src="../reveal.js/img/color.png">
+                    </section>
+                    <section>
+                        <h3>References</h3>
+                        <ul>
+                            <li>
+                                z3-playground <a href="https://github.com/0vercl0k/z3-playground">https://github.com/0vercl0k/z3-playground</a>
+                            </li>
+                            <li>
+                                stuffz <a href="https://github.com/0vercl0k/stuffz">https://github.com/0vercl0k/stuffz</a>
+                            </li>
+                            <li>
+                                <a href="https://doar-e.github.io/presentations/securityday2015/SecDay-Lille-2015-Axel-0vercl0k-Souchet.html">Theorem prover, symbolic execution and practical reverse-engineering</a>
+                            </li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>结论</h3>
+                        <ul>
+                            <li>
+                                Z3很强大，脑洞有多大，就有多强大
+                            </li>
+                            <li>
+                                还有一些常用的求解器推荐：
+                            </li>
+                                <ul>
+                                    <li>
+                                        Google家的 or-tools <a href="https://github.com/google/or-tools">https://github.com/google/or-tools</a>
+                                    </li>
+                                    <li>
+                                        KLEE支持最好的 STP <a href="http://stp.github.io/">http://stp.github.io/</a>
+                                    </li>
+                                    <li>
+                                        据说学术界用的最多的 CVC4 <a href="http://cvc4.cs.nyu.edu/web/">http://cvc4.cs.nyu.edu/web/</a>
+                                    </li>
+                                </ul>
+                        </ul>
+                    </section>
+				</section>
+
+				<section>
+                    <section>
+                        <h2>ROP(return oriented programming)</h2>
+                        <p>
+                        ROP常用于绕过堆栈不可执行（W^X），和地址随机化（ASLR）保护机制。
+                        </p>
+                    </section>
+                    <section>
+                        <h3>W^X是啥?</h3>
+                        <p>
+                        Write xor Execute. 写和执行权限不可同时存在。
+                        </p>
+                        <pre><code data-trim contenteditable>
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+No RELRO        No canary found   NX enabled    No PIE          No RPATH   No RUNPATH   sorter
+                        </code></pre>
+                        <pre><code data-trim contenteditable>
+ lieanu@ARCH  ~/ctf/pwn_ex2015/week2/mario/mario  psg sorter
+lieanu   24735  0.7  0.1  88276 16940 pts/3    Sl+  19:45   0:00 ./sorter
+lieanu   26986  0.0  0.0  13016  2400 pts/20   S+   19:45   0:00 /usr/bin/grep --color=auto sorter
+ lieanu@ARCH  ~/ctf/pwn_ex2015/week2/mario/mario  cat /proc/24735/maps
+00400000-00402000 r-xp 00000000 08:12 3810617                            /home/lieanu/ctf/pwn_ex2015/week2/mario/mario/sorter
+00601000-00602000 rw-p 00001000 08:12 3810617                            /home/lieanu/ctf/pwn_ex2015/week2/mario/mario/sorter
+0141e000-0143f000 rw-p 00000000 00:00 0                                  [heap]
+7f70f0000000-7f70f0822000 rw-p 00000000 00:00 0 
+7f70f0822000-7f70f4000000 ---p 00000000 00:00 0 
+7f70f761f000-7f70f7620000 ---p 00000000 00:00 0 
+7f70f7620000-7f70f7e20000 rw-p 00000000 00:00 0                          [stack:24741]
+7f70f7e20000-7f70f7e21000 ---p 00000000 00:00 0 
+7f70f7e21000-7f70f8621000 rw-p 00000000 00:00 0                          [stack:24738]
+7f70f8621000-7f70f87ba000 r-xp 00000000 08:11 789677                     /usr/lib/libc-2.21.so
+7f70f87ba000-7f70f89ba000 ---p 00199000 08:11 789677                     /usr/lib/libc-2.21.so
+7f70f89ba000-7f70f89be000 r--p 00199000 08:11 789677                     /usr/lib/libc-2.21.so
+7f70f89be000-7f70f89c0000 rw-p 0019d000 08:11 789677                     /usr/lib/libc-2.21.so
+7f70f89c0000-7f70f89c4000 rw-p 00000000 00:00 0 
+7f70f89c4000-7f70f89dc000 r-xp 00000000 08:11 789739                     /usr/lib/libpthread-2.21.so
+7f70f89dc000-7f70f8bdb000 ---p 00018000 08:11 789739                     /usr/lib/libpthread-2.21.so
+7f70f8bdb000-7f70f8bdc000 r--p 00017000 08:11 789739                     /usr/lib/libpthread-2.21.so
+7f70f8bdc000-7f70f8bdd000 rw-p 00018000 08:11 789739                     /usr/lib/libpthread-2.21.so
+7f70f8bdd000-7f70f8be1000 rw-p 00000000 00:00 0 
+7f70f8be1000-7f70f8c03000 r-xp 00000000 08:11 789787                     /usr/lib/ld-2.21.so
+7f70f8dc6000-7f70f8dca000 rw-p 00000000 00:00 0 
+7f70f8e02000-7f70f8e03000 r--p 00021000 08:11 789787                     /usr/lib/ld-2.21.so
+7f70f8e03000-7f70f8e04000 rw-p 00022000 08:11 789787                     /usr/lib/ld-2.21.so
+7f70f8e04000-7f70f8e05000 rw-p 00000000 00:00 0 
+7ffeb0a4f000-7ffeb0a70000 rw-p 00000000 00:00 0                          [stack]
+7ffeb0aaf000-7ffeb0ab1000 r--p 00000000 00:00 0                          [vvar]
+7ffeb0ab1000-7ffeb0ab3000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
+                        </code></pre>
+                    </section>
+                    <section>
+                        <h3>x86 ROP技巧</h3>
+                        <p>GCC x86, 函数调用，使用栈传参数。</p>
+                        <img data-src="../reveal.js/img/stack-convention.png">
+                    </section>
+                    <section>
+                        <h3>x86 ROP技巧</h3>
+                        <img data-src="../reveal.js/img/stack-x86.png">
+                    </section>
+                    <section>
+                        <h3>x64 ROP技巧</h3>
+                        <p>x64使用寄存器和栈混合传递参数。</p>
+                        <p>其寄存器传参数顺序: %rdi %rsi %rdx %rcx %r8 %r9</p>
+                        <p>多于6个参数，再使用栈传递参数</p>
+                    </section>
+                    <section>
+                        <h3>x64 ROP技巧</h3>
+                        <img data-src="../reveal.js/img/stack-x64.png">
+                    </section>
+				</section>
+
+				<section>
+                    <section>
+                        <h2>Automate ROP</h2>
+                    </section>
+                    <section>
+                        <h3>现有的方法</h3>
+                        <ul>
+                            <li>
+                                <p>好像没看到实现应用特别有效的方法。</p>
+                            </li>
+                            <li>
+                                <p>Pwntools的rop模块，使用pop xxx, ret等gadget。生硬，不通用，只能用于x86。</p>
+                            </li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>目标</h3>
+                        <p>支持X86/X64/ARM，以及ELF和Windows PE。不做耗时的重复工作，让ROP变得更容易。</p>
+                    </section>
+                    <section>
+                        <h2>Q</h2>
+                        <p>Q: Exploit Hardening Made Easy</p>
+                        <img data-src="../reveal.js/img/Q_arch.png">
+                    </section>
+                    <section>
+                        <h3>Gadget提取</h3>
+                        <p>前文已提到具体方法，还要满足以下条件:</p>
+                        <ul>
+                            <li>
+                                Gadget必须是有用的。
+                            </li>
+                            <li>
+                                控制流能够传递。
+                            </li>
+                            <li>
+                                知道所有的副作用。比如不能乱往内存里写东西.
+                            </li>
+                            <li>
+                                栈指针的增减必须是一个固定值.
+                            </li>
+                        </ul>
+                        <p>Gadget的分类与分析验证，前文已提到，不再叙述。</p>
+                    </section>
+                    <section>
+                        <h3>Gadget组合</h3>
+                        <p>两个Gadget能够组合使用，满足以下条件</p>
+                        <ul>
+                            <li>
+                                Gadget a的dst，是Gadget b的src。也就是说值能继续传递。    
+                            </li>
+                            <li>
+                                Gadget a和b之间要用的寄存器或内存，不能被他们俩之间的Gadget使用。
+                            </li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>Gadget组合算法</h3>
+                        <ul>
+                            <li>
+                                构造Gadget之间的关系图，以Gadget为顶点，两个Gadget相关的寄存器为边。
+                            </li>
+                            <li>
+                                使用图的路径遍历算法，找到指定输入寄存器或内存，到指定输出寄存器或内存的所有路径。
+                            </li>
+                            <pre><code data-trim contenteditable>
+#Example: A的输出寄存器为eax，eax又被B和C做为输入寄存器使用
+#         所以有A到B和C的关系如下，依次类推，构造Gadget关系图。
+graph = {'A': set(['B', 'C']),
+         'B': set(['A', 'D', 'E']),
+         'C': set(['A', 'F']),
+         'D': set(['B']),
+         'E': set(['B', 'F']),
+         'F': set(['C', 'E'])}
+                            </code></pre>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>x86的Gadget组合</h3>
+                        <p>只需要记录每个Gadget的esp增减的值，并确保该gadget无副作用即可。</p>
+                        <p>因为x86使用栈传参数，不使用寄存器。</p>
+                    </section>
+                    <section>
+                        <h3>x86的Gadget组合</h3>
+                        <p>只需要记录每个Gadget的esp增减的值，并确保该gadget无副作用即可。</p>
+                        <p>因为x86使用栈传参数，不使用寄存器。</p>
+                    </section>
+				</section>
+
+                <section>
+                    <h1>DEMO</h1>
+                </section>
+
+				<section style="text-align: left;">
+					<h1>THE END</h1>
+				</section>
+
+			</div>
+
+		</div>
+
+		<script src="../reveal.js/lib/js/head.min.js"></script>
+		<script src="../reveal.js/js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available at:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'zoom', // none/fade/slide/convex/concave/zoom
+
+				// Optional reveal.js plugins
+				dependencies: [
+					{ src: '../reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: '../reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: '../reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: '../reveal.js/plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: '../reveal.js/plugin/zoom-js/zoom.js', async: true },
+					{ src: '../reveal.js/plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
