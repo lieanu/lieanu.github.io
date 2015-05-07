@@ -7,7 +7,7 @@ tags: [gsoc2015, pwn]
 
 > week sync 01
 
-Last week:
+## Last week:
 
 * Read most of the barf's codes
     * Github: [https://github.com/programa-stic/barf-project](https://github.com/programa-stic/barf-project).
@@ -22,7 +22,7 @@ Last week:
 * Done a simple x86 ROP implementation.
 * Coding for x64 now.
 
-Next week:
+## Next week:
 
 * Do some ARM ROP examples
     * [https://github.com/binjitsu/examples/issues/2](https://github.com/binjitsu/examples/issues/2).
