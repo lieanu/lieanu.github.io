@@ -17,7 +17,7 @@ tags: [gsoc2015, pwn]
 Phase 01: Extract gadgets.
 
 * Extract gadgets using capstone.
-* Filter gadgets when ELF file size more than 100KB now.
+* Filter gadgets when ELF file size bigger than 100KB.
 * Cache gadgets in a tmp file, as old rop module do.
 * Convert gadgets into REIL instructions using BARF
 * Classify and verify gadgets using BARF. **Here is the bottleneck of performance**
@@ -31,7 +31,7 @@ Phase 02: Search gadgets for specific regs
 Phase 03: Building ROP chain.
 
 * Using `call()` function to add a func and arguments
-* Decide to find which gadgets base on the number of auguments.
+* Find which gadgets will be used, base on the number of auguments.
 * Solve the gadget to decide the value on the stack. FOR EXAMPLE: `system("/bin/sh")`, using `pop rdi; ret`.
     * One argument, so `pop rdi; ret` will be used, Search it out as Phase02.
     * Add REIL instructions of "pop rdi; ret" to code_analyzer module of BARF project.
