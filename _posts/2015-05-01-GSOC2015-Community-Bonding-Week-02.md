@@ -10,7 +10,7 @@ tags: [gsoc2015, pwn]
 ##Last week:
 
 * Finish a simple implementation, support x86 and x64 now.
-    * https://github.com/lieanu/binjitsu/blob/multirop/pwnlib/rop.py
+    * [https://github.com/lieanu/binjitsu/blob/multirop/pwnlib/rop.py](https://github.com/lieanu/binjitsu/blob/multirop/pwnlib/rop.py)
 
 ###How?
 
@@ -43,7 +43,7 @@ Phase 03: Building ROP chain.
 
 ##Next week:
 
-* Go on optimizing the performance. 
+* Go on optimizing the performance of this module. 
     * After extract gadgets with captone and cache gadgets in a tmp file, the performance is much better now.
     * The classify pass of BARF is a bottleneck now. 170 instructions cost about 50 seconds.
     * I just wanna to know the destination and source regs of one gadgets, maybe the classify pass is unnecessary. Find a way to replace it.
