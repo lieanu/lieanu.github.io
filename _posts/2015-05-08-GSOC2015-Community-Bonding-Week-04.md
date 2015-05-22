@@ -11,6 +11,8 @@ tags: [gsoc2015, pwn]
 
 Automatic building rop chain for x86/x64/arm elf.
 
+* [https://github.com/lieanu/binjitsu/blob/multirop/pwnlib/rop.py](https://github.com/lieanu/binjitsu/blob/multirop/pwnlib/rop.py)
+
 Using topological sorting to solve two issues: 
 
 * Solved [ROP Register Dependency Resolution #21](https://github.com/binjitsu/binjitsu/issues/21), see `set_registers()` in rop.py module.
